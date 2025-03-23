@@ -4,8 +4,8 @@ import org.openqa.selenium.chrome.ChromeDriver;
 
 public class WebDriverSetup {
     public static WebDriver setupDriver() {
-        // Настройка ChromeDriver с помощью WebDriverManager
-        WebDriverManager.chromedriver().driverVersion("134.0.6998.118").setup();
+        // Автоматическая настройка ChromeDriver
+        WebDriverManager.chromedriver().setup();
 
         // Логирование для проверки
         System.out.println("ChromeDriver успешно настроен с помощью WebDriverManager.");
@@ -13,7 +13,10 @@ public class WebDriverSetup {
 
         // Создание экземпляра ChromeDriver
         WebDriver driver = new ChromeDriver();
-        driver.manage().window().maximize(); // Максимизируем окно браузера
+
+        // Максимизация окна браузера (опционально)
+        driver.manage().window().maximize();
+
         return driver;
     }
 }
