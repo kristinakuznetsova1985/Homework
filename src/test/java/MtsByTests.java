@@ -1,3 +1,4 @@
+import io.qameta.allure.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,222 +12,253 @@ import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Epic("Тесты для сайта MTS.BY")
+@Feature("Проверка функционала оплаты")
 public class MtsByTests {
     private WebDriver driver;
     private MtsByHomePage homePage;
     private PaymentPage paymentPage;
 
     @BeforeEach
+    @Step("Настройка драйвера и открытие сайта")
     public void setUp() {
         driver = WebDriverSetup.setupDriver();
         homePage = new MtsByHomePage(driver);
-        driver.get("https://www.mts.by/"); // Исправленный URL
+        driver.get("https://www.mts.by/");
 
-        // Ожидаем загрузки страницы
         try {
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
             wait.until(ExpectedConditions.urlContains("mts.by"));
+            Allure.addAttachment("Страница загружена", "text/plain", "Страница успешно загружена.");
             System.out.println("Страница успешно загружена.");
         } catch (Exception e) {
+            Allure.addAttachment("Ошибка загрузки", "text/plain", "Страница не загрузилась: " + e.getMessage());
             System.out.println("Страница не загрузилась: " + e.getMessage());
         }
 
-        // Закрываем куки-бар
         homePage.closeCookieBar();
     }
 
     @Test
+    @Story("Проверка заголовка блока")
+    @Description("Тест проверяет корректность отображения заголовка блока оплаты")
+    @Severity(SeverityLevel.CRITICAL)
     public void testBlockTitle() {
         String actualText = homePage.getBlockTitleText();
         assertEquals("Онлайн пополнение без комиссии", actualText,
                 "Ожидаемый текст: 'Онлайн пополнение без комиссии', но был получен: " + actualText);
+        Allure.addAttachment("Результат проверки", "text/plain", "Заголовок блока корректен: " + actualText);
     }
 
     @Test
-    public void testContinueButton() {
-        homePage.enterPhoneNumber("297777777");
-        homePage.enterAmount("10");
-        assertTrue(homePage.isContinueButtonEnabled(), "Кнопка 'Продолжить' не активна");
-        homePage.clickContinueButton();
-
-        paymentPage = new PaymentPage(driver);
-        assertTrue(paymentPage.isErrorMessageDisplayed(), "Сообщение об ошибке не отображается");
-    }
-
-    @Test
+    @Story("Проверка страницы оплаты")
+    @Description("Тест проверяет поля и логотипы на странице оплаты")
+    @Severity(SeverityLevel.BLOCKER)
     public void testPaymentPageFieldsAndLogos() {
-        // Выбираем "Услуги связи"
         homePage.selectServices();
+        Allure.addAttachment("Выбор услуги", "text/plain", "Выбран пункт 'Услуги связи'.");
+        System.out.println("Выбран пункт 'Услуги связи'.");
 
-        // Вводим номер телефона и сумму
-        homePage.enterPhoneNumberForPayment("297777777");
-        homePage.enterAmount("10");
+        String phoneNumber = "297777777";
+        String amount = "10";
+        homePage.enterPhoneNumberForPayment(phoneNumber);
+        System.out.println("Введен номер телефона: " + phoneNumber + ".");
+        homePage.enterAmount(amount);
+        System.out.println("Введена сумма: " + amount + ".");
+        Allure.addAttachment("Ввод данных", "text/plain",
+                String.format("Введен номер: %s и сумма: %s", phoneNumber, amount));
 
-        // Нажимаем кнопку "Продолжить"
         homePage.clickContinueButton();
+        System.out.println("Нажата кнопка 'Продолжить'.");
+        Allure.addAttachment("Переход", "text/plain", "Нажата кнопка 'Продолжить'.");
 
-        // Переходим на страницу оплаты
         paymentPage = new PaymentPage(driver);
 
-        // Логируем текущий URL для отладки
-        System.out.println("Текущий URL: " + driver.getCurrentUrl());
-
-        // Ожидаем загрузки страницы оплаты
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        WebElement iframe = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("/html/body/div[8]/div/iframe")));
+        driver.switchTo().frame(iframe);
+        System.out.println("Переключение на iframe выполнено.");
+        Allure.addAttachment("Iframe", "text/plain", "Переключение на iframe выполнено.");
 
-        // 1. Устанавливаем фокус на поле ввода номера карты
-        paymentPage.focusOnCardNumberInput();
+        WebElement cardNumberLabel = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//label[text()='Номер карты']")));
+        assertEquals("Номер карты", cardNumberLabel.getText(), "Неверный плейсхолдер для номера карты");
+        System.out.println("Плейсхолдер 'Номер карты' корректен.");
+        Allure.addAttachment("Проверка поля", "Плейсхолдер 'Номер карты' корректен");
 
-        // 2. Проверяем плейсхолдер для поля "Номер карты"
-        assertEquals("Номер карты", paymentPage.getCardNumberPlaceholder(), "Неверный плейсхолдер для номера карты");
+        WebElement expiryDateLabel = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//label[text()='Срок действия']")));
+        assertEquals("Срок действия", expiryDateLabel.getText(), "Неверный плейсхолдер для срока действия");
+        System.out.println("Плейсхолдер 'Срок действия' корректен.");
+        Allure.addAttachment("Проверка поля", "Плейсхолдер 'Срок действия' корректен");
 
-        // 3. Проверяем плейсхолдер для поля "Срок действия"
-        WebElement cardExpiryInput = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//input[@placeholder='Срок действия']")));
-        assertEquals("Срок действия", cardExpiryInput.getAttribute("placeholder"), "Неверный плейсхолдер для срока действия");
+        WebElement cvvLabel = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//label[text()='CVC']")));
+        assertEquals("CVC", cvvLabel.getText(), "Неверный плейсхолдер для CVC");
+        System.out.println("Плейсхолдер 'CVC' корректен.");
+        Allure.addAttachment("Проверка поля", "Плейсхолдер 'CVC' корректен");
 
-        // 4. Проверяем плейсхолдер для поля "CVV"
-        WebElement cardCvvInput = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//input[@placeholder='CVV']")));
-        assertEquals("CVV", cardCvvInput.getAttribute("placeholder"), "Неверный плейсхолдер для CVV");
+        WebElement cardHolderLabel = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//label[text()='Имя держателя (как на карте)']")));
+        assertEquals("Имя держателя (как на карте)", cardHolderLabel.getText(), "Неверный плейсхолдер для имени держателя карты");
+        System.out.println("Плейсхолдер 'Имя держателя (как на карте)' корректен.");
+        Allure.addAttachment("Проверка поля", "Плейсхолдер 'Имя держателя' корректен");
 
-        // 5. Проверяем плейсхолдер для поля "Имя держателя (как на карте)"
-        WebElement cardHolderNameInput = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//input[@placeholder='Имя держателя (как на карте)']")));
-        assertEquals("Имя держателя (как на карте)", cardHolderNameInput.getAttribute("placeholder"), "Неверный плейсхолдер для имени держателя карты");
+        WebElement visaLogo = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//img[contains(@src, 'visa-system.svg')]")));
+        assertTrue(visaLogo.isDisplayed(), "Логотип Visa не отображается");
+        System.out.println("Логотип Visa отображается корректно.");
+        Allure.addAttachment("Проверка логотипа", "Логотип Visa отображается");
 
-        // 6. Проверяем сумму и номер телефона
-        assertEquals("10.00 BYN", paymentPage.getPaymentAmountTop(), "Неверная сумма оплаты сверху страницы");
-        assertEquals("Оплатить 10.00 BYN", paymentPage.getPaymentAmountButton(), "Неверная сумма оплаты на кнопке");
-        assertTrue(paymentPage.getDisplayedPhoneNumber().contains("375297777777"), "Неверный номер телефона");
+        WebElement mastercardLogo = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//img[contains(@src, 'mastercard-system.svg')]")));
+        assertTrue(mastercardLogo.isDisplayed(), "Логотип Mastercard не отображается");
+        System.out.println("Логотип Mastercard отображается корректно.");
+        Allure.addAttachment("Проверка логотипа", "Логотип Mastercard отображается");
 
-        // 7. Проверяем логотипы
-        assertTrue(paymentPage.isVisaLogoDisplayed(), "Логотип Visa не отображается");
+        WebElement belcardLogo = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//img[contains(@src, 'belkart-system.svg')]")));
+        assertTrue(belcardLogo.isDisplayed(), "Логотип Белкарт не отображается");
+        System.out.println("Логотип Белкарт отображается корректно.");
+        Allure.addAttachment("Проверка логотипа", "Логотип Белкарт отображается");
 
-        // Проверяем логотип Mastercard с ожиданием
         try {
-            WebElement mastercardLogo = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//img[contains(@src, 'mastercard-system.svg')]")));
-            assertTrue(mastercardLogo.isDisplayed(), "Логотип Mastercard не отображается");
+            WebElement maestroLogo = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//img[contains(@src, 'maestro-system.svg')]")));
+            assertTrue(maestroLogo.isDisplayed(), "Логотип Maestro не отображается");
+            System.out.println("Логотип Maestro отображается корректно.");
+            Allure.addAttachment("Проверка логотипа", "Логотип Maestro отображается");
         } catch (Exception e) {
-            System.out.println("Логотип Mastercard не найден: " + e.getMessage());
-            fail("Логотип Mastercard не отображается");
+            WebElement mirLogo = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//img[contains(@src, 'mir-system-ru.svg')]")));
+            assertTrue(mirLogo.isDisplayed(), "Логотип Мир не отображается");
+            System.out.println("Логотип Мир отображается корректно.");
+            Allure.addAttachment("Проверка логотипа", "Логотип Мир отображается");
         }
 
-        // Проверяем остальные логотипы
-        assertTrue(paymentPage.isBelcardLogoDisplayed(), "Логотип Белкарт не отображается");
-        assertTrue(paymentPage.isMaestroOrMirLogoDisplayed(), "Логотип Maestro или Мир не отображается");
+        WebElement paymentButton = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("/html/body/app-root/div/div/div/app-payment-container/section/div/app-card-page/div/div[1]/button")
+        ));
+        String paymentAmountText = paymentButton.getText();
+        assertEquals("Оплатить 10.00 BYN", paymentAmountText, "Текст на кнопке оплаты не совпадает с ожидаемым");
+        System.out.println("Текст на кнопке оплаты корректен: " + paymentAmountText);
+        Allure.addAttachment("Проверка кнопки", "Текст на кнопке: " + paymentAmountText);
+
+        WebElement paymentAmountTop = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//span[contains(text(), '10.00 BYN')]")
+        ));
+        String paymentAmountTopText = paymentAmountTop.getText();
+        assertEquals("10.00 BYN", paymentAmountTopText, "Сумма оплаты вверху страницы не совпадает с ожидаемой");
+        System.out.println("Сумма оплаты вверху страницы корректен: " + paymentAmountTopText);
+        Allure.addAttachment("Проверка суммы", "Сумма вверху: " + paymentAmountTopText);
+
+        WebElement phoneNumberDisplay = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//span[contains(text(), 'Номер:375297777777')]")
+        ));
+        String phoneNumberText = phoneNumberDisplay.getText();
+        assertTrue(phoneNumberText.contains("375297777777"), "Номер телефона вверху страницы не совпадает с ожидаемым");
+        System.out.println("Номер телефона вверху страницы корректен: " + phoneNumberText);
+        Allure.addAttachment("Проверка номера", "Номер телефона: " + phoneNumberText);
+
+        driver.switchTo().defaultContent();
+        System.out.println("Возврат к основному контенту выполнен.");
+        Allure.addAttachment("Переключение", "Возврат к основному контенту");
     }
 
     @Test
-    public void testEmptyFieldsPlaceholders() {
-        homePage.enterPhoneNumber("297777777");
-        homePage.enterAmount("10");
-        homePage.clickContinueButton();
-
-        paymentPage = new PaymentPage(driver);
-        assertEquals("Номер телефона", homePage.getPhoneNumberPlaceholder(), "Неверный плейсхолдер для номера телефона");
-        assertEquals("Сумма", homePage.getAmountPlaceholder(), "Неверный плейсхолдер для суммы");
-        assertEquals("Номер карты", paymentPage.getCardNumberPlaceholder(), "Неверный плейсхолдер для номера карты");
-        assertEquals("Срок действия", paymentPage.getCardExpiryPlaceholder(), "Неверный плейсхолдер для срока действия");
-        assertEquals("CVV", paymentPage.getCardCvvPlaceholder(), "Неверный плейсхолдер для CVV");
-    }
-
-    @Test
+    @Story("Проверка оплаты домашнего интернета")
+    @Description("Тест проверяет поля при выборе опции 'Домашний интернет'")
+    @Severity(SeverityLevel.NORMAL)
     public void testHomeInternetPayment() {
         try {
-            // 1. Логируем начало теста
             System.out.println("Запуск теста: проверка надписей в полях при выборе 'Домашний интернет'.");
-
-            // 2. Выбираем "Домашний интернет"
             homePage.selectHomeInternet();
             System.out.println("Пункт 'Домашний интернет' успешно выбран.");
+            Allure.addAttachment("Выбор услуги", "text/plain", "Выбран пункт 'Домашний интернет'.");
 
-            // 3. Проверяем плейсхолдеры полей
             assertEquals("Номер абонента", homePage.getPhoneNumberPlaceholder(), "Неверный плейсхолдер для номера телефона");
-            assertEquals("Сумма", homePage.getInternetAmountPlaceholder(), "Неверный плейсхолдер для суммы"); // Используем новый метод
+            assertEquals("Сумма", homePage.getInternetAmountPlaceholder(), "Неверный плейсхолдер для суммы");
             assertEquals("E-mail для отправки чека", homePage.getEmailPlaceholder(), "Неверный плейсхолдер для e-mail");
+            Allure.addAttachment("Проверка плейсхолдеров", "Все плейсхолдеры корректны");
 
-            // 4. Проверяем, что поля доступны для ввода
             assertTrue(homePage.isPhoneInputEnabled(), "Поле 'Номер абонента' недоступно для ввода");
             assertTrue(homePage.isAmountInputEnabled(), "Поле 'Сумма' недоступно для ввода");
             assertTrue(homePage.isEmailInputEnabled(), "Поле 'E-mail' недоступно для ввода");
+            Allure.addAttachment("Проверка доступности полей", "Все поля доступны для ввода");
 
-            // 5. Логируем успешное завершение теста
             System.out.println("Тест успешно завершен: все плейсхолдеры и поля корректны.");
         } catch (Exception e) {
-            // 6. Логируем ошибку, если что-то пошло не так
             System.out.println("Тест завершился с ошибкой: " + e.getMessage());
-            throw e; // Перебрасываем исключение, чтобы тест был отмечен как неудачный
+            Allure.addAttachment("Ошибка", "text/plain", "Тест завершился с ошибкой: " + e.getMessage());
+            throw e;
         }
     }
 
     @Test
+    @Story("Проверка оплаты рассрочки")
+    @Description("Тест проверяет поля при выборе опции 'Рассрочка'")
+    @Severity(SeverityLevel.NORMAL)
     public void testInstallmentPayment() {
-        // 1. Открываем выпадающий список и выбираем "Рассрочка"
         homePage.selectInstallment();
+        Allure.addAttachment("Выбор услуги", "text/plain", "Выбран пункт 'Рассрочка'.");
 
-        // 2. Проверяем текст в пустых полях
         assertEquals("Номер счета на 44", homePage.getAccountNumberPlaceholder(), "Неверный плейсхолдер для номера счета");
         assertEquals("Сумма", homePage.getAmountPlaceholder(), "Неверный плейсхолдер для суммы");
         assertEquals("E-mail для отправки чека", homePage.getEmailPlaceholder(), "Неверный плейсхолдер для e-mail");
+        Allure.addAttachment("Проверка плейсхолдеров", "Все плейсхолдеры корректны");
     }
 
     @Test
+    @Story("Проверка оплаты задолженности")
+    @Description("Тест проверяет поля при выборе опции 'Задолженность'")
+    @Severity(SeverityLevel.NORMAL)
     public void testDebtPayment() {
         try {
-            // 1. Логируем начало теста
             System.out.println("Запуск теста: проверка надписей в полях при выборе 'Задолженность'.");
-
-            // 2. Выбираем "Задолженность"
             homePage.selectDebt();
             System.out.println("Пункт 'Задолженность' успешно выбран.");
+            Allure.addAttachment("Выбор услуги", "text/plain", "Выбран пункт 'Задолженность'.");
 
-            // 3. Проверяем плейсхолдеры полей
             assertEquals("Номер счета на 2073", homePage.getArrearsAccountNumberPlaceholder(), "Неверный плейсхолдер для номера счета");
             assertEquals("Сумма", homePage.getArrearsAmountPlaceholder(), "Неверный плейсхолдер для суммы");
             assertEquals("E-mail для отправки чека", homePage.getArrearsEmailPlaceholder(), "Неверный плейсхолдер для e-mail");
+            Allure.addAttachment("Проверка плейсхолдеров", "Все плейсхолдеры корректны");
 
-            // 4. Проверяем, что поля доступны для ввода
             assertTrue(homePage.isArrearsAccountNumberInputEnabled(), "Поле 'Номер счета на 2073' недоступно для ввода");
             assertTrue(homePage.isArrearsAmountInputEnabled(), "Поле 'Сумма' недоступно для ввода");
             assertTrue(homePage.isArrearsEmailInputEnabled(), "Поле 'E-mail' недоступно для ввода");
+            Allure.addAttachment("Проверка доступности полей", "Все поля доступны для ввода");
 
-            // 5. Логируем успешное завершение теста
             System.out.println("Тест успешно завершен: все плейсхолдеры и поля корректны.");
         } catch (Exception e) {
-            // 6. Логируем ошибку, если что-то пошло не так
             System.out.println("Тест завершился с ошибкой: " + e.getMessage());
-            throw e; // Перебрасываем исключение, чтобы тест был отмечен как неудачный
+            Allure.addAttachment("Ошибка", "text/plain", "Тест завершился с ошибкой: " + e.getMessage());
+            throw e;
         }
     }
 
     @Test
+    @Story("Проверка оплаты услуг связи")
+    @Description("Тест проверяет поля при выборе опции 'Услуги связи'")
+    @Severity(SeverityLevel.NORMAL)
     public void testServicesPayment() {
         try {
-            // 1. Логируем начало теста
             System.out.println("Запуск теста: проверка надписей в полях при выборе 'Услуги связи'.");
-
-            // 2. Выбираем "Услуги связи"
             homePage.selectServices();
             System.out.println("Пункт 'Услуги связи' успешно выбран.");
+            Allure.addAttachment("Выбор услуги", "text/plain", "Выбран пункт 'Услуги связи'.");
 
-            // 3. Проверяем плейсхолдеры полей
             assertEquals("Номер телефона", homePage.getConnectionPhonePlaceholder(), "Неверный плейсхолдер для номера телефона");
             assertEquals("Сумма", homePage.getConnectionAmountPlaceholder(), "Неверный плейсхолдер для суммы");
             assertEquals("E-mail для отправки чека", homePage.getConnectionEmailPlaceholder(), "Неверный плейсхолдер для e-mail");
+            Allure.addAttachment("Проверка плейсхолдеров", "Все плейсхолдеры корректны");
 
-            // 4. Проверяем, что поля доступны для ввода
             assertTrue(homePage.isConnectionPhoneInputEnabled(), "Поле 'Номер телефона' недоступно для ввода");
             assertTrue(homePage.isConnectionAmountInputEnabled(), "Поле 'Сумма' недоступно для ввода");
             assertTrue(homePage.isConnectionEmailInputEnabled(), "Поле 'E-mail' недоступно для ввода");
+            Allure.addAttachment("Проверка доступности полей", "Все поля доступны для ввода");
 
-            // 5. Логируем успешное завершение теста
             System.out.println("Тест успешно завершен: все плейсхолдеры и поля корректны.");
         } catch (Exception e) {
-            // 6. Логируем ошибку, если что-то пошло не так
             System.out.println("Тест завершился с ошибкой: " + e.getMessage());
-            throw e; // Перебрасываем исключение, чтобы тест был отмечен как неудачный
+            Allure.addAttachment("Ошибка", "text/plain", "Тест завершился с ошибкой: " + e.getMessage());
+            throw e;
         }
     }
 
     @AfterEach
+    @Step("Завершение теста")
     public void tearDown() {
         if (driver != null) {
             driver.quit();

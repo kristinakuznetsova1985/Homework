@@ -13,14 +13,14 @@ public class PaymentPage {
     private WebDriverWait wait;
 
     // Локаторы для суммы оплаты
-    @FindBy(xpath = "/html/body/app-root/div/div/div/app-payment-container/section/div/div/div[1]/div[1]/span")
+    @FindBy(xpath = "//span[@class='payment-amount']")
     private WebElement paymentAmountTop;
 
-    @FindBy(xpath = "/html/body/app-root/div/div/div/app-payment-container/section/div/app-card-page/div/div[1]")
+    @FindBy(xpath = "//button[contains(text(), 'Оплатить')]")
     private WebElement paymentAmountButton;
 
     // Локатор для номера телефона
-    @FindBy(xpath = "/html/body/app-root/div/div/div/app-payment-container/section/div/div/div[2]")
+    @FindBy(xpath = "//div[@class='phone-number']")
     private WebElement phoneNumberDisplay;
 
     // Локаторы для сообщения об ошибке
@@ -29,7 +29,7 @@ public class PaymentPage {
 
     // Локаторы для полей карты
     @FindBy(xpath = "//input[@placeholder='Номер карты']")
-    private WebElement cardNumberInput; // Поле ввода номера карты
+    private WebElement cardNumberInput;
 
     @FindBy(xpath = "//input[@placeholder='Срок действия']")
     private WebElement cardExpiryInput;
@@ -106,26 +106,9 @@ public class PaymentPage {
         }
     }
 
-    // Метод для установки фокуса на поле ввода номера карты
-    public void focusOnCardNumberInput() {
-        try {
-            wait.until(ExpectedConditions.visibilityOf(cardNumberInput));
-            ((JavascriptExecutor) driver).executeScript("arguments[0].focus();", cardNumberInput);
-            System.out.println("Фокус установлен на поле ввода номера карты.");
-        } catch (Exception e) {
-            System.out.println("Ошибка при установке фокуса на поле ввода номера карты: " + e.getMessage());
-        }
-    }
-
     // Метод для получения плейсхолдера поля "Номер карты"
     public String getCardNumberPlaceholder() {
-        try {
-            wait.until(ExpectedConditions.visibilityOf(cardNumberInput));
-            return cardNumberInput.getAttribute("placeholder");
-        } catch (Exception e) {
-            System.out.println("Ошибка при получении плейсхолдера для номера карты: " + e.getMessage());
-            return null;
-        }
+        return cardNumberInput.getAttribute("placeholder");
     }
 
     // Метод для получения плейсхолдера поля "Срок действия"
@@ -179,16 +162,13 @@ public class PaymentPage {
     // Метод для проверки отображения логотипа Maestro или Мир
     public boolean isMaestroOrMirLogoDisplayed() {
         try {
-            // Проверяем, отображается ли Maestro
             if (maestroLogo.isDisplayed()) {
                 return true;
             }
         } catch (Exception e) {
-            // Если Maestro не отображается, проверяем Мир
             try {
                 return mirLogo.isDisplayed();
             } catch (Exception ex) {
-                // Если ни один из логотипов не отображается
                 return false;
             }
         }
