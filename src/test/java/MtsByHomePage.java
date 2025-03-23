@@ -34,36 +34,36 @@ public class MtsByHomePage {
     private WebElement phoneInput;
 
     @FindBy(xpath = "//input[@placeholder='Номер счета на 44']")
-    private WebElement accountNumberInput; // Новое поле для номера счета
+    private WebElement accountNumberInput;
 
     @FindBy(xpath = "//input[@placeholder='Сумма']")
     private WebElement amountInput;
 
     @FindBy(xpath = "//*[@id='internet-sum']")
-    private WebElement internetAmountInput; // Поле "Сумма" для Домашнего интернет
+    private WebElement internetAmountInput;
 
     @FindBy(xpath = "//input[@placeholder='E-mail для отправки чека']")
     private WebElement emailInput;
 
     // Локаторы для полей "Задолженность"
     @FindBy(xpath = "//*[@id='score-arrears']")
-    private WebElement arrearsAccountNumberInput; // Поле "Номер счета на 2073"
+    private WebElement arrearsAccountNumberInput;
 
     @FindBy(xpath = "//*[@id='arrears-sum']")
-    private WebElement arrearsAmountInput; // Поле "Сумма" для Задолженности
+    private WebElement arrearsAmountInput;
 
     @FindBy(xpath = "//*[@id='arrears-email']")
-    private WebElement arrearsEmailInput; // Поле "E-mail" для Задолженности
+    private WebElement arrearsEmailInput;
 
     // Локаторы для полей "Услуги связи"
     @FindBy(xpath = "//*[@id='connection-phone']")
-    private WebElement connectionPhoneInput; // Поле "Номер телефона"
+    private WebElement connectionPhoneInput;
 
     @FindBy(xpath = "//*[@id='connection-sum']")
-    private WebElement connectionAmountInput; // Поле "Сумма" для Услуг связи
+    private WebElement connectionAmountInput;
 
     @FindBy(xpath = "//*[@id='connection-email']")
-    private WebElement connectionEmailInput; // Поле "E-mail" для Услуг связи
+    private WebElement connectionEmailInput;
 
     // Локаторы для кнопок и других элементов
     @FindBy(xpath = "/html/body/div[6]/main/div/div[2]/div/div[2]/button[3]")
@@ -96,53 +96,44 @@ public class MtsByHomePage {
         return blockTitle.getText().replace("\n", " ").replaceAll("\\s+", " ").trim();
     }
 
-    // Метод для ввода номера телефона (используется в старых тестах)
+    // Метод для ввода номера телефона
     public void enterPhoneNumber(String phoneNumber) {
         try {
-            // Ожидаем, пока поле "Номер телефона" станет видимым и кликабельным
             wait.until(ExpectedConditions.visibilityOf(phoneInput));
             wait.until(ExpectedConditions.elementToBeClickable(phoneInput));
-
-            // Вводим номер телефона
-            phoneInput.clear(); // Очищаем поле перед вводом
+            phoneInput.clear();
             phoneInput.sendKeys(phoneNumber);
             System.out.println("Номер телефона успешно введен.");
         } catch (Exception e) {
             System.out.println("Ошибка при вводе номера телефона: " + e.getMessage());
-            throw e; // Перебрасываем исключение, чтобы тест был отмечен как неудачный
+            throw e;
         }
     }
 
-    // Метод для ввода номера телефона (используется в новом тесте)
+    // Метод для ввода номера телефона для оплаты
     public void enterPhoneNumberForPayment(String phoneNumber) {
         try {
-            // Ожидаем, пока поле "Номер телефона" станет видимым и кликабельным
             wait.until(ExpectedConditions.visibilityOf(connectionPhoneInput));
             wait.until(ExpectedConditions.elementToBeClickable(connectionPhoneInput));
-
-            // Вводим номер телефона
-            connectionPhoneInput.clear(); // Очищаем поле перед вводом
+            connectionPhoneInput.clear();
             connectionPhoneInput.sendKeys(phoneNumber);
             System.out.println("Номер телефона успешно введен.");
         } catch (Exception e) {
             System.out.println("Ошибка при вводе номера телефона: " + e.getMessage());
-            throw e; // Перебрасываем исключение, чтобы тест был отмечен как неудачный
+            throw e;
         }
     }
 
     // Метод для ввода суммы
     public void enterAmount(String amount) {
         try {
-            // Ожидаем, пока поле "Сумма" станет кликабельным
             wait.until(ExpectedConditions.elementToBeClickable(amountInput));
-
-            // Вводим сумму
-            amountInput.clear(); // Очищаем поле перед вводом
+            amountInput.clear();
             amountInput.sendKeys(amount);
             System.out.println("Сумма успешно введена.");
         } catch (Exception e) {
             System.out.println("Ошибка при вводе суммы: " + e.getMessage());
-            throw e; // Перебрасываем исключение, чтобы тест был отмечен как неудачный
+            throw e;
         }
     }
 
@@ -154,10 +145,7 @@ public class MtsByHomePage {
     // Метод для клика по кнопке "Продолжить"
     public void clickContinueButton() {
         try {
-            // Прокручиваем страницу до кнопки
             ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", continueButton);
-
-            // Ожидаем, пока кнопка станет кликабельной
             wait.until(ExpectedConditions.elementToBeClickable(continueButton)).click();
             System.out.println("Кнопка 'Продолжить' успешно нажата.");
         } catch (Exception e) {
